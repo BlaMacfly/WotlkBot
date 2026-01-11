@@ -1,48 +1,52 @@
-# WotlkBot
-![](https://raw.githubusercontent.com/Artanidos/WotlkBot/master/Gui/screen.png)  
-The WotlkBot shall be a possibilty to turn your WoW (World of Warcraft) charcater to become a bot and to join your party or raid and fight together with you.  
-The user can create a Python script to control the bots behaviour.
+# WotlkBot - WotLK 3.3.5a Botting Solution
 
-This software shall only be used for your own private server like AzerothCore to be able to go into dungeons and raids alone.
-It can also be used on other private servers, where botting is allowed. Maybe Solocraft could allow to use it, because they have also party-bots implemented.
+![WotlkBot GUI](https://raw.githubusercontent.com/Artanidos/WotlkBot/master/Gui/screen.png)
 
-## Motivation
-I am playing Wow now since the first months. Since Blizzard has sold Wow to Activision, the retail version does not make much fun anymore, but the old version 3.3.5 Wrath of the Lich King was a very good extension.  
-- 10 man raids where posible.  
-- The dungeon finder has helped a lot to make many heroic dungeons every day.  
-- The talent-tree was in god shape.  
-- The Paladin, wich was my main char in Vanilla is now tanky since TBC.  
-- The frost deathknight could tank dual-whield, which was real fun.  
+> **Forked from [Artanidos/WotlkBot](https://github.com/Artanidos/WotlkBot)**  
+> **Major Update:** Complete GUI Redesign ("Obsidian Theme"), Dashboard Layout, and Modular AI.
 
-I have played all classes at least to level 120. And what would be more fun and also timesaving if you level 5 chars at the same time?
-You can decide which class to play in the group. And maybe you are a brilliant warlock, then you can write a brilliant bot-script for your warlock and stear another class as your main. Playing a tank with bots is real fun. I made my first experience with Solocraft and I know every single mistake these bots are making, so I can improve mine.
-Botting is like multiboxing just more fascinating.
+WotlkBot allows you to turn your World of Warcraft 3.3.5a characters into intelligent bots that can join your party, fight, heal, and quest alongside you. It is designed for private servers (e.g. AzerothCore) to enable solo play of dungeons and raids.
 
-I have started to alter AzerothCore (private server) to make characters botable, but failed in some cases. I found no chance to equip the right gear to a bot.  
-- Compiling the server took a long time and crashed often with heap memory allocation issues.  
-- I was not able to loot when I had a bot in my party and I gave up after 3 days searching for that issue.  
- 
-Then I found the project (mClient) from Michał Kałużny and was able to make it running as a 3.3.5 compatible client.
+## 🚀 New Features (v2.0)
 
-## WoW-Killer
-Developing this library could also lead to the possibility to create a new MMORPG based on the protokoll from Wow, the AzerothCore on the server and a Client based on Unreal engine 5, Unity or Godot 4. 
+*   **Modern GUI Redesign**: A sleek, dark-themed "Obsidian" interface inspired by VS Code.
+*   **Dashboard View**: Real-time status monitoring of all your bots in a single card-based layout.
+*   **Modular AI**:
+    *   **Healer Bot**: Intelligent healing priorities.
+    *   **Combat Modules**: Pluggable strategies for different classes (Warrior, Paladin, Mage, etc.).
+*   **Service-Based Architecture**: Separation of UI and Logic for better stability.
 
-## Features Ready
-- Login character
-- Invite bot into a group
+## 🛠️ Usage
 
-## Features Planned
-- Bot shall follow the master (angle, distance)
-- Bot shall be able to react on commands like STAY, MOVE, TABLE (for mages), LOCKPICK (for rogues)
-- Bot shall buff
-- Bot shall heal, dps or tank
-- Bot shall accept same quest as master
-- Bot shall roll for items and equip items
-- And whatever you wish...
+### Prerequisites
+*   Windows OS
+*   .NET Framework 4.8.1 (or compatible runtime)
+*   A World of Warcraft 3.3.5a Account (on a private server)
 
-## Porting to C++
-This project will be ported to C++ so that the library can be used for example with Unreal Engine, Python and on Android.   
-See: https://github.com/CrowdWare/AzerothClient
+### Getting Started
+1.  **Clone** this repository.
+2.  **Open** `WotlkBot.sln` in Visual Studio 2019/2022.
+3.  **Build** the `WotlkBotGui` project.
+4.  **Run** `WotlkBotGui.exe`.
 
-## Base
-This project is based on https://github.com/justMaku/mClient from Michał Kałużny.
+### Configuration
+*   **Settings Tab**: Set your Realmlist (Host) and Master Character Name.
+*   **Dashboard**: Click **"+ Add Bot"** to configure a new bot account.
+    *   Select Class (Warrior, Priest, etc.).
+    *   Enter Account Name / Password.
+    *   Click **Start** on the bot card to connect.
+
+## 🤖 Bot Features
+
+*   **Follow Master**: Automatically follows the configured master character.
+*   **Combat**: Attacks targets engaged by the master.
+*   **Chat Commands**: Reacts to whispers (e.g., "buff", "mount", "come").
+*   **Auto-Loot**: (Experimental) Loots mobs in range.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please submit Pull Requests to the [GitHub Repository](https://github.com/BlaMacfly/WotlkBot).
+
+## 📄 License
+
+This project is open-source. Please credit the original authors when forking.
