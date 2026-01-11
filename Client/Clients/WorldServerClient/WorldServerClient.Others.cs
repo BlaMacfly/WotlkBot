@@ -58,7 +58,15 @@ namespace WotlkClient.Clients
         public void HandleGroupInvite(PacketIn inpacket)
         {
             inpacket.ReadByte();
-            inviteCallBack(inpacket.ReadString());
+            string inviter = inpacket.ReadString();
+            Console.WriteLine($"[Group] Invited by {inviter}. Auto-accepting.");
+            
+            PacketOut packet = new PacketOut(WorldServerOpCode.CMSG_GROUP_ACCEPT);
+            packet.Write((UInt32)0);
+            Send(packet);
+
+            if(inviteCallBack != null)
+                inviteCallBack(inviter);
         }
 
         public void AcceptInviteRequest()
@@ -107,6 +115,26 @@ namespace WotlkClient.Clients
             packet.Write((UInt32)0x00);
             packet.Write((UInt64)0x00);
             Send(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_NEW_WORLD)]
+        public void HandleNewWorld(PacketIn packet)
+        {
+            UInt32 mapId = packet.ReadUInt32();
+            float x = packet.ReadFloat();
+            float y = packet.ReadFloat();
+            float z = packet.ReadFloat();
+            float o = packet.ReadFloat();
+
+            Console.WriteLine($"[World] New World: Map {mapId} at {x} {y} {z}");
+            
+            if (terrainMgr != null)
+                terrainMgr.ChangeMap(mapId);
+            
+            if (player != null)
+            {
+                player.Position = new Coordinate(x, y, z, o);
+            }
         }
 
     }

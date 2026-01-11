@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WotlkClient</RootNamespace>
     <AssemblyName>WotlkClient</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -53,6 +53,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Speech, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Security" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -112,8 +113,22 @@
     <Compile Include="Utils\Log.cs" />
     <Compile Include="Utils\Time.cs" />
     <Compile Include="World\CombatMgr.cs" />
+    <Compile Include="World\HealingMgr.cs" />
+    <Compile Include="AI\AIChatMgr.cs" />
+    <Compile Include="AI\AIBehaviorMgr.cs" />
+    <Compile Include="AI\KnowledgeMgr.cs" />
     <Compile Include="World\MovementMgr.cs" />
     <Compile Include="World\ObjectMgr.cs" />
+    <Compile Include="World\PartyMgr.cs" />
+    <Compile Include="World\NeedsMgr.cs" />
+    <Compile Include="World\InitiativeMgr.cs" />
+    <Compile Include="World\SocialMgr.cs" />
+    <Compile Include="World\GatherMgr.cs" />
+    <Compile Include="World\QuestHelperMgr.cs" />
+    <Compile Include="World\DuelMgr.cs" />
+    <Compile Include="World\StrategyMgr.cs" />
+    <Compile Include="World\MemoryMgr.cs" />
+    <Compile Include="World\VoiceMgr.cs" />
     <Compile Include="World\TerrainManager.cs" />
     <Compile Include="World\Terrain\ADTProcessor.cs" />
     <Compile Include="World\Terrain\BlizChunkHeader.cs" />

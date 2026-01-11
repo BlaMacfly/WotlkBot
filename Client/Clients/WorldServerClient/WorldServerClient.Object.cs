@@ -412,6 +412,28 @@ namespace WotlkClient.Clients
                 obj.Name = name;
                 ObjectMgr.GetInstance().updateObject(obj);
                 Console.WriteLine("Name updated for " + name);
+
+                // Process queued chat for this user
+                ArrayList processed = new ArrayList();
+                foreach (ChatQueue q in ChatQueued)
+                {
+                    if (q.GUID.GetOldGuid() == guid.GetOldGuid())
+                    {
+                        if ((ChatMsg)q.Type == ChatMsg.Whisper && aiChatMgr != null && aiChatMgr.AIEnabled)
+                        {
+                            Console.WriteLine($"[AI] Processing queued whisper from {name}: {q.Message}");
+                            string response = aiChatMgr.GetResponse(q.Message);
+                            if (!string.IsNullOrEmpty(response))
+                            {
+                                Console.WriteLine($"[AI] Response: {response}");
+                                SendChatMsg(ChatMsg.Whisper, GetMyLanguage(), response, name);
+                            }
+                        }
+                        Log.WriteLine(LogType.Chat, "[{0}] {1}", prefix, name, q.Message);
+                        processed.Add(q);
+                    }
+                }
+                foreach (ChatQueue q in processed) ChatQueued.Remove(q);
             }
             else                // Create new Object        -- FIXME: Add to new 'names only' list?
             {

@@ -1,0 +1,4 @@
+extract "j:\World of Warcraft 3.3.5a\Data\common.MPQ" "World\Maps\*" "j:\World of Warcraft 3.3.5a" /fp
+extract "j:\World of Warcraft 3.3.5a\Data\expansion.MPQ" "World\Maps\*" "j:\World of Warcraft 3.3.5a" /fp
+extract "j:\World of Warcraft 3.3.5a\Data\lichking.MPQ" "World\Maps\*" "j:\World of Warcraft 3.3.5a" /fp
+exit

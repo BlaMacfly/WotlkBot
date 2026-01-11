@@ -14,7 +14,7 @@ namespace WotlkClient.Terrain
 
         static float TILESIZE = 533.33333f;
         static float ZEROPOINT = 32.0f * TILESIZE;
-        private UInt32 MapId;
+        public UInt32 MapId { get; private set; }
         string prefix;
         public TerrainMgr(string _prefix)
         {
@@ -137,6 +137,21 @@ namespace WotlkClient.Terrain
             MapTable map = new MapTable(prefix);
 
             string mapname = map.getMapName(MapId);
+            
+            // Fallback if DBC is missing or returns null
+            if (string.IsNullOrEmpty(mapname))
+            {
+                switch(MapId)
+                {
+                    case 0: mapname = "Azeroth"; break;
+                    case 1: mapname = "Kalimdor"; break;
+                    case 530: mapname = "Expansion01"; break; // Outland
+                    case 571: mapname = "Northrend"; break;
+                    default: mapname = "Kalimdor"; break; // Default safely
+                }
+            }
+            
+            
             MapTile tile = new MapTile(mapname, x, z, prefix);
             mapTiles.Add(tile);
             return tile;

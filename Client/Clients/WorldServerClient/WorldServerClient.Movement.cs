@@ -35,7 +35,7 @@ namespace WotlkClient.Clients
             packet.Write(position.O);
             packet.Write((UInt32)0);    // falltime  
             Send(packet);
-            Console.WriteLine("move forward " + player.Name + ", " + position.ToString());
+            //Console.WriteLine("move forward " + player.Name + ", " + position.ToString());
         }
 
         public void MoveStop(Coordinate position, uint time)
@@ -51,7 +51,7 @@ namespace WotlkClient.Clients
             packet.Write(position.O);
             packet.Write((UInt32)0);    // falltime 
             Send(packet);
-            Console.WriteLine("move stop " + player.Name);
+            //Console.WriteLine("move stop " + player.Name);
         }
 
 
@@ -130,6 +130,10 @@ namespace WotlkClient.Clients
         {
             if (player == null || player.Position == null)
                 return;
+
+            // Update AI Autonomous Behavior
+            if (aiBehaviorMgr != null)
+                aiBehaviorMgr.Update();
 
             PacketOut packet = new PacketOut(WorldServerOpCode.MSG_MOVE_HEARTBEAT);
             packet.Write(movementMgr.Flag.MoveFlags);

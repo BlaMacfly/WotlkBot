@@ -34,7 +34,7 @@ namespace WotlkBotGui
 
         public void Init()
         {
-            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
+            SQLitePCL.Batteries.Init();
             using (var con = new SqliteConnection(cs))
             {
                 con.Open();

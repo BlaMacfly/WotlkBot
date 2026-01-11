@@ -38,7 +38,7 @@ namespace WotlkClient.Network
 
 		public override string ReadString()
 		{
-			StringBuilder sb = new StringBuilder();
+            List<byte> buffer = new List<byte>();
 			while (true)
 			{
                 byte b;
@@ -48,9 +48,9 @@ namespace WotlkClient.Network
                    b = 0;
 
 				if (b == 0) break;
-				sb.Append((char)b);
+				buffer.Add(b);
 			}
-			return sb.ToString();
+			return Encoding.UTF8.GetString(buffer.ToArray());
 		}
 
 		public byte[] ReadRemaining()

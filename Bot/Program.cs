@@ -18,6 +18,8 @@ namespace WotlkBot
         static WorldServerClient wclient;
         static string accountName;
         static string charName;
+        static CommandProcessor commandProcessor;
+        static bool isLoggedIn = false;
 
         public static void Main(string[] args)
         {
@@ -54,24 +56,17 @@ namespace WotlkBot
             {
                 System.Console.WriteLine("An error occured: {0}", ex.Message);
             }
-            /* just a test to call python for later bot scripting
-            string filename = "priest.py";
-            string path = Assembly.GetExecutingAssembly().Location;
-            string rootDir = Directory.GetParent(path).FullName;
 
-            ScriptEngine engine = Python.CreateEngine();
-
-            ScriptSource source;
-            source = engine.CreateScriptSourceFromFile(rootDir + "\\" + filename);
-
-            ScriptScope scope = engine.CreateScope();
-
-            int result = source.ExecuteProgram();
-            */
-
-            while (true)
+            // Wait for login to complete then start command loop
+            while (!isLoggedIn)
             {
+                System.Threading.Thread.Sleep(100);
+            }
 
+            // Start the command processor
+            if (commandProcessor != null)
+            {
+                commandProcessor.StartCommandLoop();
             }
         }
 
@@ -150,9 +145,16 @@ namespace WotlkBot
             if(result == 0)
             {
                 System.Console.WriteLine("Logged into world with " + charName);
+                
+                // Initialize the command processor
+                commandProcessor = new CommandProcessor(wclient, charName);
+                isLoggedIn = true;
             }
             else
+            {
                 System.Console.WriteLine("Char login failed");
+                isLoggedIn = true; // Set to true to exit the wait loop
+            }
         }
     }
 }

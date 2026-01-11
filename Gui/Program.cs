@@ -14,9 +14,17 @@ namespace WotlkBotGui
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            try
+            {
+                Application.EnableVisualStyles(); 
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new MainWindow());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error starting application:\n\n{ex.Message}\n\n{ex.StackTrace}", 
+                    "WotlkBotGui Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

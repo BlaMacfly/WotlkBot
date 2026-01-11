@@ -32,7 +32,7 @@ namespace WotlkClient.Network
 
 		public override void Write(string Text)
 		{
-			if (Text != null) Write(Encoding.Default.GetBytes(Text));
+			if (Text != null) Write(Encoding.UTF8.GetBytes(Text));
 			Write((byte)0); // String terminator
 		}
 		

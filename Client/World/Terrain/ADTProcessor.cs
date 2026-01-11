@@ -30,7 +30,7 @@ namespace WotlkClient.Terrain
             {
                 try
                 {
-                    string filename = String.Format(@"maps\{0}\{0}_{1}_{2}.adt", mapname, x, z);
+                    string filename = Path.Combine(_prefix, String.Format(@"World\Maps\{0}\{0}_{1}_{2}.adt", mapname, x, z));
                     adtStream = new FileStream(filename, FileMode.Open);
                     parseFile();
 

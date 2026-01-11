@@ -8,7 +8,9 @@ using WotlkClient.Constants;
 using WotlkClient.Crypt;
 using WotlkClient.Network;
 using WotlkClient.Shared;
+using WotlkClient.Shared;
 using WotlkClient.Terrain;
+using WotlkClient.AI;
 
 namespace WotlkClient.Clients
 {
@@ -59,6 +61,19 @@ namespace WotlkClient.Clients
         public MovementMgr movementMgr = null;
         public CombatMgr combatMgr = null;
         public TerrainMgr terrainMgr = null;
+        public HealingMgr healingMgr = null;
+        public AIChatMgr aiChatMgr = null;
+        public AIBehaviorMgr aiBehaviorMgr = null;
+        public PartyMgr partyMgr = null;
+        public NeedsMgr needsMgr = null;
+        public InitiativeMgr initiativeMgr = null;
+        public SocialMgr socialMgr = null;
+        public GatherMgr gatherMgr = null;
+        public QuestHelperMgr questHelperMgr = null;
+        public DuelMgr duelMgr = null;
+        public StrategyMgr strategyMgr = null;
+        public MemoryMgr memoryMgr = null;
+        public VoiceMgr voiceMgr = null;
         
         //
         public Realm realm;
@@ -68,12 +83,29 @@ namespace WotlkClient.Clients
 
         public WorldServerClient(string user, Realm rl, byte[] key, string charName, AuthCompletedCallBack callback)
         {
-            prefix = user;
+            // Set data path to WoW Root or current dir. Avoid using Username as path!
+            // Assuming bot is in bin, WoW root is up two levels? Or just hardcode for this user env.
+            prefix = @"j:\World of Warcraft 3.3.5a"; 
+            
             mUsername = user.ToUpper();
             mCharname = charName;
             terrainMgr = new TerrainMgr(prefix);
             movementMgr = new MovementMgr(this, prefix);
             combatMgr = new CombatMgr(this, prefix);
+            healingMgr = new HealingMgr(this, prefix);
+            partyMgr = new PartyMgr(this, prefix);
+            needsMgr = new NeedsMgr(this, prefix);
+            initiativeMgr = new InitiativeMgr(this, prefix);
+            socialMgr = new SocialMgr(this, prefix);
+            gatherMgr = new GatherMgr(this, prefix);
+            questHelperMgr = new QuestHelperMgr(this, prefix);
+            duelMgr = new DuelMgr(this, prefix);
+            strategyMgr = new StrategyMgr(this, prefix);
+            memoryMgr = new MemoryMgr();
+            voiceMgr = new VoiceMgr();
+
+            aiChatMgr = new AIChatMgr(prefix);
+            aiBehaviorMgr = new AIBehaviorMgr(this);
             realm = rl;
             mKey = key;
             authCompletedCallBack = callback;
@@ -210,6 +242,55 @@ namespace WotlkClient.Clients
             pHandler.HandlePacket(packet);
         }
 
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_PARTY_MEMBER_STATS)]
+        public void HandlePartyMemberStats(PacketIn packet)
+        {
+            if (partyMgr != null)
+                partyMgr.HandlePartyMemberStats(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_LEVELUP_INFO)]
+        public void HandleLevelUp(PacketIn packet)
+        {
+            if (socialMgr != null)
+                socialMgr.HandleLevelUp(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_QUESTGIVER_QUEST_DETAILS)]
+        public void HandleQuestDetails(PacketIn packet)
+        {
+            if (questHelperMgr != null)
+                questHelperMgr.HandleQuestDetails(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_QUESTUPDATE_ADD_KILL)]
+        public void HandleQuestUpdateKill(PacketIn packet)
+        {
+            if (questHelperMgr != null)
+                questHelperMgr.HandleQuestUpdateKill(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_DUEL_REQUESTED)]
+        public void HandleDuelRequest(PacketIn packet)
+        {
+            if (duelMgr != null)
+                duelMgr.HandleDuelRequest(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_DUEL_WINNER)]
+        public void HandleDuelWinner(PacketIn packet)
+        {
+            if (duelMgr != null)
+                duelMgr.HandleDuelWinner(packet);
+        }
+
+        [PacketHandlerAtribute(WorldServerOpCode.SMSG_DUEL_COUNTDOWN)]
+        public void HandleDuelCountdown(PacketIn packet)
+        {
+            if (duelMgr != null)
+                duelMgr.HandleDuelCountdown(packet);
+        }
+
         public void Disconnect()
         {
             
@@ -224,6 +305,20 @@ namespace WotlkClient.Clients
                 movementMgr.Stop();
             if (combatMgr != null)
                 combatMgr.Stop();
+            if (needsMgr != null)
+                needsMgr.Stop();
+            if (initiativeMgr != null)
+                initiativeMgr.Stop();
+            if (socialMgr != null)
+                socialMgr.Stop();
+            if (gatherMgr != null)
+                gatherMgr.Stop();
+            if (questHelperMgr != null)
+                questHelperMgr.Stop();
+            if (duelMgr != null)
+                duelMgr.Stop();
+            if (strategyMgr != null)
+                strategyMgr.Stop();
             if (pLoop != null)
                 pLoop.Stop();
             Connected = false;
@@ -232,6 +327,21 @@ namespace WotlkClient.Clients
         ~WorldServerClient()
         {
             HardDisconnect();
+        }
+
+        public void SetSelection(WoWGuid guid)
+        {
+            PacketOut packet = new PacketOut(WorldServerOpCode.CMSG_SET_SELECTION);
+            packet.Write(guid.GetOldGuid());
+            Send(packet);
+        }
+
+
+
+        public void SendAttackStop()
+        {
+            PacketOut packet = new PacketOut(WorldServerOpCode.CMSG_ATTACKSTOP);
+            Send(packet);
         }
 
         void AppendPackedGuid(UInt64 guid, PacketOut stream)

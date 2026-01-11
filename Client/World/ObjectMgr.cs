@@ -150,5 +150,26 @@ namespace WotlkClient.Clients
         {
             return mObjects.ToArray();
         }
+
+        /// <summary>
+        /// Find an object by name (case-insensitive)
+        /// </summary>
+        public Object FindObjectByName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+            
+            return mObjects.Find(s => 
+                s.Name != null && 
+                s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Get all objects as a list
+        /// </summary>
+        public List<Object> GetAllObjects()
+        {
+            return new List<Object>(mObjects);
+        }
     }
 }

@@ -19,47 +19,33 @@ namespace WotlkClient.Shared
 
                     if (Config.LogToFile)
                     {
-                        if (type == LogType.Packet)
+                        string suffix = "";
+                        switch (type)
                         {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_packet_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
+                            case LogType.Packet: suffix = "_packet_log.txt"; break;
+                            case LogType.Network: suffix = "_network_log.txt"; break;
+                            case LogType.Error: suffix = "_error_log.txt"; break;
+                            case LogType.Debug: suffix = "_debug_log.txt"; break;
+                            case LogType.Chat: suffix = "_chat_log.txt"; break;
+                            case LogType.Normal: suffix = "_normal_log.txt"; break;
                         }
-                        else if (type == LogType.Network)
+
+                        if (!string.IsNullOrEmpty(suffix))
                         {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_network_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
-                        }
-                        else if (type == LogType.Error)
-                        {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_error_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
-                        }
-                        else if (type == LogType.Debug)
-                        {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_debug_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
-                        }
-                        else if (type == LogType.Chat)
-                        {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_chat_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
-                        }
-                        else if(type == LogType.Normal)
-                        {
-                            StreamWriter packetFile = File.AppendText("logs/" + prefix + "_normal_log.txt");
-                            packetFile.WriteLine(msg);
-                            packetFile.Flush();
-                            packetFile.Close();
+                            try
+                            {
+                                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                                string logDir = Path.Combine(baseDir, "logs");
+                                if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+
+                                string path = Path.Combine(logDir, prefix + suffix);
+                                using (StreamWriter packetFile = File.AppendText(path))
+                                {
+                                    packetFile.WriteLine(msg);
+                                    packetFile.Flush();
+                                }
+                            }
+                            catch { } // Prevent crash during logging
                         }
 
                     }

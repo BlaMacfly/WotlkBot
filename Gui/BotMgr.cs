@@ -6,49 +6,88 @@ using WotlkClient.Terrain;
 
 namespace WotlkBotGui
 {
-    internal class BotMgr
+    public class BotMgr
     {
         private LogonServerClient loginClient;
         private WorldServerClient worldClient;
-        private Bot bot;
-        string master;
+        
+        public Bot BotModel { get; private set; }
+        public string Master { get; private set; }
+        
+        // Status properties
+        public string CurrentStatus { get; private set; } = "Idle";
+        public int HealthPercent { get; private set; } = 0;
+        public int ManaPercent { get; private set; } = 0;
+        public string ZoneName { get; private set; } = "-";
+
         private bool shouldStop = false;
 
-        public void Main(Bot bot, string host, int port, string _master)
+        public BotMgr(Bot bot)
         {
-            master = _master;
+            this.BotModel = bot;
+        }
 
-            LoginCompletedCallBack callback = new LoginCompletedCallBack(LoginComplete); ;
-            this.bot = bot;
+        public void Main(string host, int port, string _master)
+        {
+            Master = _master;
+            shouldStop = false;
+            CurrentStatus = "Connecting...";
+
+            LoginCompletedCallBack callback = new LoginCompletedCallBack(LoginComplete);
             try
             {
-                loginClient = new LogonServerClient(host, port, bot.AccountName, bot.Password, callback);
+                loginClient = new LogonServerClient(host, port, BotModel.AccountName, BotModel.Password, callback);
                 loginClient.Connect();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occured: {0}", ex.Message);
+                CurrentStatus = "Error";
             }
 
             while (!shouldStop)
             {
-                Thread.Sleep(100);       
+                // Update internal status loop
+                if (worldClient != null && worldClient.player != null) 
+                {
+                    if (worldClient.player.MaxHealth > 0)
+                        HealthPercent = (int)((float)worldClient.player.Health / (float)worldClient.player.MaxHealth * 100);
+                    
+                    if (worldClient.player.MaxMana > 0)
+                        ManaPercent = (int)((float)worldClient.player.Mana / (float)worldClient.player.MaxMana * 100);
+
+                    // Update Status Text
+                    if (worldClient.combatMgr != null && worldClient.combatMgr.currentTarget != null)
+                        CurrentStatus = "Combat (" + worldClient.combatMgr.currentTarget.Health + "hp)";
+                    else if (worldClient.player.Health == 0)
+                        CurrentStatus = "Dead";
+                    else
+                        CurrentStatus = "Online";
+                }
+
+                Thread.Sleep(500);       
             }
             Console.WriteLine("BotMgr ended");
-            loginClient.HardDisconnect();
-            if(worldClient != null)
-                worldClient.HardDisconnect();
+            loginClient?.HardDisconnect();
+            worldClient?.HardDisconnect();
+            CurrentStatus = "Disconnected";
+            HealthPercent = 0;
+            ManaPercent = 0;
         }
 
         public void LoginComplete(uint result)
         {
             if (result == 0)
             {
+                CurrentStatus = "Authenticating...";
                 RealmListCompletedCallBack callback = new RealmListCompletedCallBack(RealmListComplete);
                 loginClient.RequestRealmlist(callback);
             }
             else
+            {
                 System.Console.WriteLine("Log in failed");
+                CurrentStatus = "Login Failed";
+            }
         }
 
         public void RealmListComplete(uint result)
@@ -64,7 +103,7 @@ namespace WotlkBotGui
                 if (realm != null)
                 {
                     AuthCompletedCallBack callback = new AuthCompletedCallBack(AuthCompleted);
-                    worldClient = new WorldServerClient(bot.AccountName, realm.Value, loginClient.mKey, bot.CharName, callback);
+                    worldClient = new WorldServerClient(BotModel.AccountName, realm.Value, loginClient.mKey, BotModel.CharName, callback);
                     worldClient.Connect();
                 }
             }
@@ -90,7 +129,7 @@ namespace WotlkBotGui
                 Character? toLogin = null;
                 foreach (Character ch in worldClient.Charlist)
                 {
-                    if (ch.Name == bot.CharName)
+                    if (ch.Name == BotModel.CharName)
                         toLogin = ch;
                 }
                 
@@ -99,6 +138,10 @@ namespace WotlkBotGui
                     CharLoginCompletedCallBack callback = new CharLoginCompletedCallBack(CharLoginComplete);
                     worldClient.LoginPlayer(toLogin.Value, callback);
                 }
+                else
+                {
+                    CurrentStatus = "Char Not Found";
+                }
             }
         }
 
@@ -106,7 +149,8 @@ namespace WotlkBotGui
         {
             if (result == 0)
             {
-                Console.WriteLine("Logged into world with " + bot.CharName);
+                Console.WriteLine("Logged into world with " + BotModel.CharName);
+                CurrentStatus = "Online";
                 InviteCallBack callback = new InviteCallBack(InviteRequest);
                 worldClient.SetInviteCallback(callback);
             }
@@ -116,33 +160,35 @@ namespace WotlkBotGui
 
         public void InviteRequest(string inviter)
         {
-            if(inviter == master)
+            if(inviter == Master)
             {
                 worldClient.AcceptInviteRequest();
-                WotlkClient.Clients.Object inv = ObjectMgr.GetInstance().getObject(inviter);
-                /*
-                if (inv != null)
-                {
-                    Console.WriteLine("found " + inv.Name);
-                    if (inv.Position != null && worldClient.player.Position != null)
-                    {
-                        float dist = TerrainMgr.CalculateDistance(inv.Position, worldClient.player.Position);
-                        if (dist > 1.0)
-                        {
-                            worldClient.movementMgr.Waypoints.Add(worldClient.player.Position);
-                            worldClient.movementMgr.Start();
-                            Console.WriteLine("adding waypoint " + dist.ToString());
-                        }
-                    }
-                }*/
+                // WotlkClient.Clients.Object inv = ObjectMgr.GetInstance().getObject(inviter);
             }
         }
 
         public void Logout()
         {
-            if(worldClient != null)
-                worldClient.Logout();
+            worldClient?.Logout();
             shouldStop = true;
+        }
+
+        public void SetVoice(bool enabled)
+        {
+            if (worldClient != null && worldClient.voiceMgr != null)
+                worldClient.voiceMgr.VoiceEnabled = enabled;
+        }
+
+        public void SetSocial(bool enabled)
+        {
+            if (worldClient != null && worldClient.socialMgr != null)
+                worldClient.socialMgr.SocialEnabled = enabled;
+        }
+
+        public void SetStrategy(bool enabled)
+        {
+            if (worldClient != null && worldClient.strategyMgr != null)
+                worldClient.strategyMgr.StrategyEnabled = enabled;
         }
     }
 }

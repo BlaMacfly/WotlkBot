@@ -70,6 +70,18 @@ namespace WotlkClient.Constants
         Neutral = 2
     }
 
+    public enum PowerType : int
+    {
+        Mana = 0,
+        Rage = 1,
+        Focus = 2,
+        Energy = 3,
+        Happiness = 4, // 4?
+        Runes = 5,
+        RunicPower = 6,
+        Health = -2
+    }
+
     public enum UpdateType
     {
         /// <summary>

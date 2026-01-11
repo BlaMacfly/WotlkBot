@@ -1,0 +1,2 @@
+extract "j:\World of Warcraft 3.3.5a\Data\common.MPQ" "World\Maps\Kalimdor\Kalimdor_32_36.adt" "j:\World of Warcraft 3.3.5a" /fp
+exit

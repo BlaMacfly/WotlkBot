@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
-
 using System.Runtime.InteropServices;
 using System.Resources;
 using WotlkClient.Network;
@@ -30,6 +29,17 @@ namespace WotlkClient.Clients
         WorldServerClient worldServerClient;
 
         private Object player;
+        
+        // Formations
+        // X = Forward/Back (Positive = Front)
+        // Y = Right/Left (Positive = Left?)
+        // Z = Up/Down
+        public Coordinate FormationOffset { get; set; } = new Coordinate(0, 0, 0); 
+        
+        public Object FollowTarget { get; set; } = null;
+        private float FOLLOW_DISTANCE = 3.0f; // Dynamic based on formation?
+
+        public bool isMoving = false;
 
         public MovementMgr(WorldServerClient Client, string _prefix)
         {
@@ -37,6 +47,7 @@ namespace WotlkClient.Clients
             terrainMgr = Client.terrainMgr;
             prefix = _prefix;
         }
+
         public void SetPlayer(Object obj)
         {
             player = obj;
@@ -73,53 +84,104 @@ namespace WotlkClient.Clients
             {
                 try
                 {
-                    Coordinate Waypoint;
-                    float angle, dist;
+                    bool shouldMove = false;
+                    Object targetObj = null;
+                    Coordinate dest = null;
+                    float angle = player.Position.O;
+                    
+                    // Adjust Follow Distance based on formation
+                    // If Offset is (0,0,0), distance is standard 3.0f
+                    // If Offset is set, we want to reach the specific point, so distance threshold effectively 0 (or small tolerance)
+                    float arrivalTolerance = (FormationOffset.X == 0 && FormationOffset.Y == 0) ? 3.0f : 1.0f;
 
+                    // 1. Determine Target/Destination
+                    if (FollowTarget != null && FollowTarget.Position != null)
+                    {
+                        // Calculate Formation Target
+                        Coordinate targetPos = FollowTarget.Position;
+                        if (FormationOffset.X != 0 || FormationOffset.Y != 0)
+                        {
+                            // Rotate offset by Target's Orientation
+                            float h = targetPos.O;
+                            float dx = (float)(FormationOffset.X * Math.Cos(h) - FormationOffset.Y * Math.Sin(h));
+                            float dy = (float)(FormationOffset.X * Math.Sin(h) + FormationOffset.Y * Math.Cos(h));
+                            
+                            targetPos = new Coordinate(targetPos.X + dx, targetPos.Y + dy, targetPos.Z);
+                            // We should probably check Z via TerrainMgr but let's assume flat for now or use Target Z
+                        }
+
+                        float dist = TerrainMgr.CalculateDistance(player.Position, targetPos);
+                        
+                        if (dist > arrivalTolerance)
+                        {
+                            shouldMove = true;
+                            targetObj = FollowTarget;
+                            angle = TerrainMgr.CalculateAngle(player.Position, targetPos);
+                            
+                            // If we are very far, maybe face the targetObj directly? 
+                            // But usually we face the destination.
+                        }
+                    }
+                    else if (Waypoints.Count != 0)
+                    {
+                        dest = Waypoints.First();
+                        if (dest != null)
+                        {
+                            float dist = TerrainMgr.CalculateDistance(player.Position, dest);
+                            angle = TerrainMgr.CalculateAngle(player.Position, dest);
+                            
+                            if (dist > 1) 
+                                shouldMove = true;
+                            else
+                                Waypoints.Remove(dest); // Arrived
+                        }
+                    }
+
+                    // 2. Execute Movement State Machine
                     UInt32 timeNow = MM_GetTime();
                     UInt32 diff = (timeNow - lastUpdateTime);
                     lastUpdateTime = timeNow;
-                    if (Waypoints.Count != 0)
-                    {
-                        Waypoint = Waypoints.First();
 
-                        if (Waypoint != null)
+                    if (shouldMove)
+                    {
+                        bool rotationChanged = Math.Abs(angle - player.Position.O) > 0.25f; 
+                        
+                        if (rotationChanged)
+                            player.Position.O = angle;
+
+                        if (!isMoving)
                         {
-                            angle = TerrainMgr.CalculateAngle(player.Position, Waypoint);
-                            dist = TerrainMgr.CalculateDistance(player.Position, Waypoint);
-                            if (angle == player.Position.O)
-                            {
-                                if (dist > 1)
-                                {
-                                    Flag.SetMoveFlag(MovementFlags.MOVEMENTFLAG_FORWARD);
-                                    lastUpdateTime = timeNow;
-                                    if (UpdatePosition(diff))
-                                        worldServerClient.MoveForward(player.Position, timeNow);
-                                }
-                                else
-                                {
-                                    worldServerClient.MoveStop(player.Position, timeNow);
-                                    Waypoints.Remove(Waypoint);
-                                }
-                            }
-                            else
-                            {
-                                Flag.SetMoveFlag(MovementFlags.MOVEMENTFLAG_NONE);
-                                player.Position.O = angle;
-                            }
+                            // Start Moving
+                            Flag.SetMoveFlag(MovementFlags.MOVEMENTFLAG_FORWARD);
+                            worldServerClient.MoveForward(player.Position, timeNow);
+                            isMoving = true;
                         }
+                        else if (rotationChanged) 
+                        {
+                             worldServerClient.MoveForward(player.Position, timeNow);
+                        }
+
+                        UpdatePosition(diff);
                     }
                     else
                     {
-                        Flag.Clear();
-                        Flag.SetMoveFlag(MovementFlags.MOVEMENTFLAG_NONE);
+                        // Should Stop
+                        if (isMoving)
+                        {
+                            Flag.SetMoveFlag(MovementFlags.MOVEMENTFLAG_NONE);
+                            worldServerClient.MoveStop(player.Position, timeNow);
+                            isMoving = false;
+                        }
+                        
+                        if (FollowTarget == null && Waypoints.Count == 0 && Flag.MoveFlags != 0)
+                        {
+                            Flag.Clear();
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.WriteLine(LogType.Error, "Exception Occured", prefix);
-                    Log.WriteLine(LogType.Error, "Message: {0}", prefix, ex.Message);
-                    Log.WriteLine(LogType.Error, "Stacktrace: {0}", prefix, ex.StackTrace);
+                    Log.WriteLine(LogType.Error, "Exception Occured " + ex.Message, prefix);
                 }
                 Thread.Sleep(50);
             }
